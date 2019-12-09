@@ -1,11 +1,13 @@
 import React, { Component } from "react";
 import * as faceapi from "face-api.js";
+import * as $ from "jquery";
 import Webcam from "react-webcam";
 import "./FaceMatcher.scss";
 
 class FaceMatcher extends Component {
   state = {
-    loadedUser: "NA"
+    userName: "NA",
+    isLoading: true
   };
 
   labeledFaceDescriptors = [];
@@ -13,6 +15,7 @@ class FaceMatcher extends Component {
   async componentDidMount() {
     Promise.all([
       await faceapi.loadSsdMobilenetv1Model("/models"),
+      await faceapi.loadTinyFaceDetectorModel("/models"),
       await faceapi.loadFaceLandmarkModel("/models"),
       await faceapi.loadFaceRecognitionModel("/models"),
       this.loadLabelDescriptors()
@@ -55,11 +58,14 @@ class FaceMatcher extends Component {
   };
 
   validateUser = async () => {
-    const input = document.getElementById("myVid") as HTMLVideoElement;
+    const input = document.getElementById("myVid") as HTMLCanvasElement;
     let fullFaceDescriptions = await faceapi
       .detectAllFaces(input)
       .withFaceLandmarks()
       .withFaceDescriptors();
+
+    const canvas = $("#overlay").get(0);
+    const dims = faceapi.matchDimensions(canvas, input, true);
 
     const maxDescriptorDistance = 0.8;
     const faceMatcher = new faceapi.FaceMatcher(
@@ -67,13 +73,24 @@ class FaceMatcher extends Component {
       maxDescriptorDistance
     );
 
-    const results = fullFaceDescriptions.map(fd =>
-      faceMatcher.findBestMatch(fd.descriptor)
-    );
+    const results = fullFaceDescriptions.map(fd => {
+      const resizedResult = faceapi.resizeResults(fd, dims);
+      faceapi.draw.drawDetections(canvas, resizedResult);
+      // faceapi.draw.drawFaceLandmarks(canvas, resizedResult);
+      return faceMatcher.findBestMatch(fd.descriptor);
+    });
 
-    if (results) {
+    if (results && results[0]) {
+      setTimeout(() => {
+        this.setState({
+          userName: this.formatName(results[0].label) || "NA",
+          isLoading: false
+        });
+      }, 1000);
+    } else {
       this.setState({
-        loadedUser: this.formatName(results[0].label) || "NA"
+        userName: undefined,
+        isLoading: false
       });
     }
   };
@@ -81,11 +98,33 @@ class FaceMatcher extends Component {
   formatName = nameStr => nameStr.replace(/^.*[\\\/]/, "").toUpperCase();
 
   render() {
-    const { loadedUser: userName } = this.state;
     return (
       <section className="container">
-        <Webcam id="myVid" audio={false} />
-        <section> User is {userName === "NA" ? "Stranger" : userName} </section>
+        {this.state.isLoading ? (
+          <React.Fragment>
+            <Webcam id="myVid" audio={false} className="videoEl" />
+            <canvas id="overlay" />
+            <section className="loadingText">
+              Please Wait While we Verfiy You
+            </section>
+          </React.Fragment>
+        ) : !this.state.userName ? (
+          <React.Fragment>
+            <section className="loadingText">
+              You do not have Permissions.
+            </section>
+            <section className="detailsPage">
+              Kindly Contact the Adminstrator
+            </section>
+          </React.Fragment>
+        ) : (
+          <section className="verified-page">
+            <h3 className="userHeader">Welcome {this.state.userName}</h3>
+            <section className="detailsPage">
+              Let's Get Started with the Presentation !!
+            </section>
+          </section>
+        )}
       </section>
     );
   }

@@ -1,3 +1,38 @@
 .container {
-  color: red;
+  width: 100vw;
+  height: 100vh;
+  background-color: #eee;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
+}
+.videoEl {
+  height: 300px;
+  width: 400px;
+  border-radius: 20%;
+}
+.loadingText {
+  font-size: 36px;
+  color: #aaa;
+}
+
+#overlay,
+.overlay {
+  position: absolute;
+  top: 30px;
+  height: 300px;
+  width: 400px;
+  border-radius: 20%;
+}
+
+.userHeader {
+  font-size: 72px;
+  color: #666;
+  font-weight: 200;
+}
+
+.detailsPage {
+  font-size: 24px;
+  color: #666;
 }
