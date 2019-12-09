@@ -5,17 +5,18 @@ import "./FaceMatcher.scss";
 
 class FaceMatcher extends Component {
   state = {
-    loadedUser: "NA",
-    videoSrc: null
+    loadedUser: "NA"
   };
+
+  labeledFaceDescriptors = [];
 
   async componentDidMount() {
     Promise.all([
       await faceapi.loadSsdMobilenetv1Model("/models"),
       await faceapi.loadFaceLandmarkModel("/models"),
-      await faceapi.loadFaceRecognitionModel("/models")
+      await faceapi.loadFaceRecognitionModel("/models"),
+      this.loadLabelDescriptors()
     ]).then(() => {
-      this.loadLabelDescriptors();
       faceapi.env.monkeyPatch({
         fetch: fetch,
         Canvas: window.HTMLCanvasElement,
@@ -23,20 +24,9 @@ class FaceMatcher extends Component {
         createCanvasElement: () => document.createElement("canvas"),
         createImageElement: () => document.createElement("img")
       });
-      // if (navigator.getUserMedia) {
-      //   navigator.getUserMedia(
-      //     { video: true },
-      //     this.handleVideo,
-      //     this.videoError
-      //   );
-      // }
+      this.validateUser();
     });
   }
-  labeledFaceDescriptors = [];
-  loadedUser = "";
-
-  handleVideo = stream => {};
-  videoError = () => {};
 
   loadLabelDescriptors = async () => {
     const labels = ["/images/ashis"];
@@ -71,7 +61,7 @@ class FaceMatcher extends Component {
       .withFaceLandmarks()
       .withFaceDescriptors();
 
-    const maxDescriptorDistance = 0.6;
+    const maxDescriptorDistance = 0.8;
     const faceMatcher = new faceapi.FaceMatcher(
       this.labeledFaceDescriptors,
       maxDescriptorDistance
@@ -83,17 +73,18 @@ class FaceMatcher extends Component {
 
     if (results) {
       this.setState({
-        loadedUser: results[0].label || "NA"
+        loadedUser: this.formatName(results[0].label) || "NA"
       });
     }
   };
+
+  formatName = nameStr => nameStr.replace(/^.*[\\\/]/, "").toUpperCase();
 
   render() {
     const { loadedUser: userName } = this.state;
     return (
       <section className="container">
         <Webcam id="myVid" audio={false} />
-        <button onClick={this.validateUser}>Validate</button>
         <section> User is {userName === "NA" ? "Stranger" : userName} </section>
       </section>
     );
