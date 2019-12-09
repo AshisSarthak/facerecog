@@ -1,31 +1,45 @@
 import React, { Component } from "react";
 import * as faceapi from "face-api.js";
+import Webcam from "react-webcam";
 import "./FaceMatcher.scss";
-import { TNetInput } from "face-api.js";
 
 class FaceMatcher extends Component {
   state = {
-    loadedUser: "NA"
+    loadedUser: "NA",
+    videoSrc: null
   };
-  async componentDidMount() {
-    await faceapi.loadSsdMobilenetv1Model("/models");
-    await faceapi.loadFaceLandmarkModel("/models");
-    await faceapi.loadFaceRecognitionModel("/models");
-    this.loadLabelDescriptors();
 
-    faceapi.env.monkeyPatch({
-      fetch: fetch,
-      Canvas: window.HTMLCanvasElement,
-      Image: window.HTMLImageElement,
-      createCanvasElement: () => document.createElement("canvas"),
-      createImageElement: () => document.createElement("img")
+  async componentDidMount() {
+    Promise.all([
+      await faceapi.loadSsdMobilenetv1Model("/models"),
+      await faceapi.loadFaceLandmarkModel("/models"),
+      await faceapi.loadFaceRecognitionModel("/models")
+    ]).then(() => {
+      this.loadLabelDescriptors();
+      faceapi.env.monkeyPatch({
+        fetch: fetch,
+        Canvas: window.HTMLCanvasElement,
+        Image: window.HTMLImageElement,
+        createCanvasElement: () => document.createElement("canvas"),
+        createImageElement: () => document.createElement("img")
+      });
+      // if (navigator.getUserMedia) {
+      //   navigator.getUserMedia(
+      //     { video: true },
+      //     this.handleVideo,
+      //     this.videoError
+      //   );
+      // }
     });
   }
   labeledFaceDescriptors = [];
   loadedUser = "";
 
+  handleVideo = stream => {};
+  videoError = () => {};
+
   loadLabelDescriptors = async () => {
-    const labels = ["/images/download"];
+    const labels = ["/images/ashis"];
     return await Promise.all(
       labels.map(async label => {
         // fetch image data from urls and convert blob to HTMLImage element
@@ -50,8 +64,8 @@ class FaceMatcher extends Component {
     );
   };
 
-  uploadImage = async () => {
-    const input = document.getElementById("myImg") as HTMLCanvasElement;
+  validateUser = async () => {
+    const input = document.getElementById("myVid") as HTMLVideoElement;
     let fullFaceDescriptions = await faceapi
       .detectAllFaces(input)
       .withFaceLandmarks()
@@ -67,16 +81,19 @@ class FaceMatcher extends Component {
       faceMatcher.findBestMatch(fd.descriptor)
     );
 
-    this.setState({
-      loadedUser: results[0].label || "NA"
-    });
+    if (results) {
+      this.setState({
+        loadedUser: results[0].label || "NA"
+      });
+    }
   };
 
   render() {
     const { loadedUser: userName } = this.state;
     return (
       <section className="container">
-        <img id="myImg" src="/images/download.png" onClick={this.uploadImage} />
+        <Webcam id="myVid" audio={false} />
+        <button onClick={this.validateUser}>Validate</button>
         <section> User is {userName === "NA" ? "Stranger" : userName} </section>
       </section>
     );
