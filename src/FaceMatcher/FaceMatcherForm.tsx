@@ -67,7 +67,7 @@ class FaceMatcher extends Component {
     const canvas = $("#overlay").get(0);
     const dims = faceapi.matchDimensions(canvas, input, true);
 
-    const maxDescriptorDistance = 0.8;
+    const maxDescriptorDistance = 0.6;
     const faceMatcher = new faceapi.FaceMatcher(
       this.labeledFaceDescriptors,
       maxDescriptorDistance
@@ -108,7 +108,7 @@ class FaceMatcher extends Component {
               Please Wait While we Verfiy You
             </section>
           </React.Fragment>
-        ) : !this.state.userName ? (
+        ) : !this.state.userName || this.state.userName === "UNKNOWN" ? (
           <React.Fragment>
             <section className="loadingText">
               You do not have Permissions.
