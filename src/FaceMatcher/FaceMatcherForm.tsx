@@ -32,11 +32,11 @@ class FaceMatcher extends Component {
   }
 
   loadLabelDescriptors = async () => {
-    const labels = ["/images/ashis"];
+    const labels = ["ashis", "mohit"];
     return await Promise.all(
       labels.map(async label => {
         // fetch image data from urls and convert blob to HTMLImage element
-        const imgUrl = `${label}.png`;
+        const imgUrl = `/images/${label}.png`;
         const img = await faceapi.fetchImage(imgUrl);
 
         // detect the face with the highest score in the image and compute it's landmarks and face descriptor

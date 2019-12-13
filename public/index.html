@@ -19,6 +19,9 @@
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!-- Comment for face recognition -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script> -->
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.
@@ -31,17 +34,43 @@
     <title>React App</title>
   </head>
   <body>
+    <!-- Comment for doing image classify and matcher -->
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+    <!-- Comment for Facerecognition -->
+    <!-- <script src="../dist/mobilenet.js"></script>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+    <img id="img" src="coffee.jpg" />
+
+    <script>
+      const img = document.getElementById("img");
+      const version = 2;
+      const alpha = 0.5;
+
+      async function run() {
+        // Load the model.
+        const model = await mobilenet.load({
+          version,
+          alpha
+        });
+
+        // Classify the image.
+        const predictions = await model.classify(img);
+        console.log("Predictions");
+        console.log(predictions);
+
+        // Get the logits.
+        const logits = model.infer(img);
+        console.log("Logits");
+        logits.print(true);
+
+        // Get the embedding.
+        const embedding = model.infer(img, true);
+        console.log("Embedding");
+        embedding.print(true);
+      }
+      run();
+    </script> -->
   </body>
 </html>
