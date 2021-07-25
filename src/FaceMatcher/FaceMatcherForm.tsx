@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import * as faceapi from "face-api.js";
 import * as $ from "jquery";
 import Webcam from "react-webcam";
-import "./FaceMatcher.scss";
+import "./FaceMatcher.css";
 
 class FaceMatcher extends Component {
   state = {
@@ -12,23 +12,26 @@ class FaceMatcher extends Component {
 
   labeledFaceDescriptors = [];
 
+  loadModels = async () => {
+    const MODEL_URL = "/models";
+    await faceapi.loadSsdMobilenetv1Model(MODEL_URL);
+    await faceapi.loadFaceLandmarkModel(MODEL_URL);
+    await faceapi.loadFaceRecognitionModel(MODEL_URL);
+  };
+
   async componentDidMount() {
-    Promise.all([
-      await faceapi.loadSsdMobilenetv1Model("/models"),
-      await faceapi.loadTinyFaceDetectorModel("/models"),
-      await faceapi.loadFaceLandmarkModel("/models"),
-      await faceapi.loadFaceRecognitionModel("/models"),
-      this.loadLabelDescriptors()
-    ]).then(() => {
-      faceapi.env.monkeyPatch({
-        fetch: fetch,
-        Canvas: window.HTMLCanvasElement,
-        Image: window.HTMLImageElement,
-        createCanvasElement: () => document.createElement("canvas"),
-        createImageElement: () => document.createElement("img")
-      });
-      this.validateUser();
-    });
+    Promise.all([await this.loadModels(), this.loadLabelDescriptors()]).then(
+      () => {
+        faceapi.env.monkeyPatch({
+          fetch: fetch,
+          Canvas: window.HTMLCanvasElement,
+          Image: window.HTMLImageElement,
+          createCanvasElement: () => document.createElement("canvas"),
+          createImageElement: () => document.createElement("img")
+        });
+        this.validateUser();
+      }
+    );
   }
 
   loadLabelDescriptors = async () => {
@@ -67,7 +70,7 @@ class FaceMatcher extends Component {
     const canvas = $("#overlay").get(0);
     const dims = faceapi.matchDimensions(canvas, input, true);
 
-    const maxDescriptorDistance = 0.6;
+    const maxDescriptorDistance = 0.9;
     const faceMatcher = new faceapi.FaceMatcher(
       this.labeledFaceDescriptors,
       maxDescriptorDistance
@@ -105,7 +108,7 @@ class FaceMatcher extends Component {
             <Webcam id="myVid" audio={false} className="videoEl" />
             <canvas id="overlay" />
             <section className="loadingText">
-              Please Wait While we Verfiy You
+              Please wait while we verfiy you
             </section>
           </React.Fragment>
         ) : !this.state.userName || this.state.userName === "UNKNOWN" ? (

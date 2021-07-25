@@ -22,13 +22,16 @@
     "react-webcam": "^4.0.0",
     "typescript": "3.7.2"
   },
+  "main": "public/electron.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "dev": "concurrently -k \"BROWSER=none npm start\" \"npm:electron\"",
+    "electron": "wait-on tcp:3000 && electron ."
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -46,6 +49,10 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^2.1.1"
+    "concurrently": "^6.2.0",
+    "electron": "^13.1.7",
+    "electron-is-dev": "^2.0.0",
+    "gh-pages": "^2.1.1",
+    "wait-on": "^6.0.0"
   }
 }
